@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  This template creates an S3 bucket and a DynamoDB table for Terraform state backend.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Description: The name of the project.
+
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      AccessControl: Private
+      BucketName: !Sub ${ProjectName}-terraform-state
+      VersioningConfiguration:
+        Status: Enabled
+      Tags:
+        - Key: Name
+          Value: !Sub |-
+            Terraform backend S3 bucket for ${AWS::AccountId} by ${AWS::StackName}.
+
+  DynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub ${ProjectName}-terraform-state-lock
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: "LockID"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "LockID"
+          KeyType: "HASH"
+      Tags:
+        - Key: Name
+          Value: !Sub |-
+            Terraform backend DynamoDB table for ${AWS::AccountId} by ${AWS::StackName}.
